@@ -1,0 +1,17 @@
+{
+  "name": "55haitao-cursor-usage",
+  "owner": {
+    "name": "55haitao"
+  },
+  "metadata": {
+    "description": "Internal Cursor usage collector and related team plugins"
+  },
+  "plugins": [
+    {
+      "name": "cursor-usage-collector",
+      "source": "plugin",
+      "description": "Reports each Agent prompt to the internal usage collector",
+      "version": "1.0.0"
+    }
+  ]
+}
