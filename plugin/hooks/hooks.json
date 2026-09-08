@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "sh ./scripts/report_usage.sh",
+        "timeout": 8
+      }
+    ],
+    "stop": [
+      {
+        "command": "sh ./scripts/report_usage.sh",
+        "timeout": 8
+      }
+    ]
+  }
+}
