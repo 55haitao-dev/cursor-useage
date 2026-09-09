@@ -3,13 +3,13 @@
   "hooks": {
     "beforeSubmitPrompt": [
       {
-        "command": "cmd /c .\\scripts\\report_usage.cmd || sh ./scripts/report_usage.sh",
+        "command": "cmd /c .\\scripts\\report_usage.cmd ; sh ./scripts/report_usage.sh",
         "timeout": 2
       }
     ],
     "stop": [
       {
-        "command": "cmd /c .\\scripts\\report_usage.cmd || sh ./scripts/report_usage.sh",
+        "command": "cmd /c .\\scripts\\report_usage.cmd ; sh ./scripts/report_usage.sh",
         "timeout": 2
       }
     ]
