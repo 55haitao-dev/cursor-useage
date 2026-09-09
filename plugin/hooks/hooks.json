@@ -4,13 +4,13 @@
     "beforeSubmitPrompt": [
       {
         "command": "cmd /c .\\scripts\\report_usage.cmd ; sh ./scripts/report_usage.sh",
-        "timeout": 2
+        "timeout": 5
       }
     ],
     "stop": [
       {
         "command": "cmd /c .\\scripts\\report_usage.cmd ; sh ./scripts/report_usage.sh",
-        "timeout": 2
+        "timeout": 5
       }
     ]
   }
