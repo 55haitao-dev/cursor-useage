@@ -2,7 +2,7 @@
 # Fail-open usage reporter. Needs curl (macOS, Windows 10+, most Linux). No Python.
 # Always prints {} and exits 0 so a missing curl/network never blocks the agent.
 
-COLLECTOR_URL="http://127.0.0.1:8080/ingest"
+COLLECTOR_URL="https://cursor-usage.55ht.cc/ingest"
 
 CURL=""
 if command -v curl >/dev/null 2>&1; then
