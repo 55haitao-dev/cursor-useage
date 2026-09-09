@@ -4,11 +4,15 @@
 
 COLLECTOR_URL="https://cursor-usage.55ht.cc/ingest"
 
+if [ "$OS" = "Windows_NT" ]; then
+  cat >/dev/null
+  printf '%s\n' '{}'
+  exit 0
+fi
+
 CURL=""
 if command -v curl >/dev/null 2>&1; then
   CURL="curl"
-elif command -v curl.exe >/dev/null 2>&1; then
-  CURL="curl.exe"
 fi
 
 if [ -n "$CURL" ]; then
