@@ -15,8 +15,17 @@ COLLECTOR_URL="https://cursor-usage.55ht.cc/ingest"
 # Git Bash 里 $TEMP 是 C:\... 形式，反斜杠在这里不好用，转成正斜杠。
 tmpdir="$(printf '%s' "${TEMP:-${TMPDIR:-/tmp}}" | tr '\\' '/')"
 [ -d "$tmpdir" ] || tmpdir=/tmp
+
+# 标记必须放在 $TEMP，才能和 cmd.exe 里的 %TEMP% 对上。
 marker="${tmpdir}/cursor-usage-cmd-ran"
-LOG="${tmpdir}/cursor-usage-hook.log"
+
+# 日志单独放 ~/.cursor，路径固定好找。macOS 的 $TMPDIR 是
+# /var/folders/.../T/ 这种每用户私有目录，放那里成员根本找不到。
+if [ -n "$HOME" ] && mkdir -p "$HOME/.cursor" 2>/dev/null; then
+  LOG="$HOME/.cursor/cursor-usage-hook.log"
+else
+  LOG="${tmpdir}/cursor-usage-hook.log"
+fi
 
 log() {
   printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)" "$*" >> "$LOG" 2>/dev/null || true
