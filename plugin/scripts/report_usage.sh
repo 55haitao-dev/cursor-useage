@@ -1,40 +1,20 @@
 #!/bin/sh
-# Fail-open usage reporter. Needs curl 或 wget。不依赖 Python。
+# Fail-open usage reporter. Needs curl or wget. No Python.
 # Always prints {} and exits 0 so a missing client/network never blocks the agent.
 #
-# hooks.json 串了 `.cmd ; .sh` 两条，因为同一个命令串要能被 PowerShell 和 sh
-# 都解析。实际用哪个 shell 跑 hook 由 Cursor 决定，各机器不一样：
-#   - PowerShell：`cmd /c ...` 成功，.cmd 完成上报
-#   - Git Bash / WSL：找不到 `cmd`，.cmd 没跑，必须由本脚本上报
-# 所以不能按操作系统判断，改看 .cmd 留下的一次性标记：有标记说明这次已经报过。
-#
-# 每次执行都会往 $LOG 追加一行诊断，排查时先看它。
+# On Windows PowerShell the companion .cmd reports and leaves a one-shot marker.
+# On macOS / Linux / WSL / Git Bash this script does the report when no marker exists.
 
 COLLECTOR_URL="https://cursor-usage.55ht.cc/ingest"
 
-# Git Bash 里 $TEMP 是 C:\... 形式，反斜杠在这里不好用，转成正斜杠。
+# Git Bash: $TEMP is C:\... — normalize slashes.
 tmpdir="$(printf '%s' "${TEMP:-${TMPDIR:-/tmp}}" | tr '\\' '/')"
 [ -d "$tmpdir" ] || tmpdir=/tmp
-
-# 标记必须放在 $TEMP，才能和 cmd.exe 里的 %TEMP% 对上。
 marker="${tmpdir}/cursor-usage-cmd-ran"
-
-# 日志单独放 ~/.cursor，路径固定好找。macOS 的 $TMPDIR 是
-# /var/folders/.../T/ 这种每用户私有目录，放那里成员根本找不到。
-if [ -n "$HOME" ] && mkdir -p "$HOME/.cursor" 2>/dev/null; then
-  LOG="$HOME/.cursor/cursor-usage-hook.log"
-else
-  LOG="${tmpdir}/cursor-usage-hook.log"
-fi
-
-log() {
-  printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)" "$*" >> "$LOG" 2>/dev/null || true
-}
 
 if [ -f "$marker" ]; then
   rm -f "$marker" 2>/dev/null
   cat >/dev/null
-  log "skip reason=cmd-already-reported"
   printf '%s\n' '{}'
   exit 0
 fi
@@ -44,13 +24,9 @@ tmp="${tmpdir}/cursor-usage-$$"
 trap "rm -f \"$tmp\"" EXIT
 cat > "$tmp" 2>/dev/null
 
-# payload=0 说明 Cursor 没把 stdin 传进来（远程工作区里出现过这种情况），
-# 这时候上报也没有意义，日志里能直接看出来。
+# Empty stdin (seen in some remote workspaces) — nothing useful to send.
 bytes="$(wc -c < "$tmp" 2>/dev/null | tr -d ' ')"
-env_info="remote=${CURSOR_CODE_REMOTE:-false} os=$(uname -s 2>/dev/null || echo unknown) payload=${bytes:-0}"
-
 if [ "${bytes:-0}" = "0" ]; then
-  log "skip ${env_info} reason=empty-stdin"
   printf '%s\n' '{}'
   exit 0
 fi
@@ -58,24 +34,19 @@ fi
 occurred="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || true)"
 
 if command -v curl >/dev/null 2>&1; then
-  status="$(curl -sS -m 5 --connect-timeout 3 \
+  curl -sS -m 5 --connect-timeout 3 \
     -X POST \
     -H "Content-Type: application/json" \
     -H "User-Agent: cursor-usage-collector/1.0" \
     -H "X-Occurred-At: ${occurred}" \
     --data-binary @"$tmp" \
-    -o /dev/null -w '%{http_code}' \
-    "$COLLECTOR_URL" 2>>"$LOG")"
-  log "post ${env_info} client=curl http=${status:-none} exit=$?"
+    "$COLLECTOR_URL" >/dev/null 2>&1 || true
 elif command -v wget >/dev/null 2>&1; then
   wget -q -O /dev/null -T 5 \
     --header="Content-Type: application/json" \
     --header="X-Occurred-At: ${occurred}" \
     --post-file="$tmp" \
-    "$COLLECTOR_URL" 2>>"$LOG"
-  log "post ${env_info} client=wget exit=$?"
-else
-  log "skip ${env_info} reason=no-curl-or-wget"
+    "$COLLECTOR_URL" >/dev/null 2>&1 || true
 fi
 
 printf '%s\n' '{}'
