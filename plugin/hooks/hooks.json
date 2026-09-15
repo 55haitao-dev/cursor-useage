@@ -3,7 +3,7 @@
   "hooks": {
     "beforeSubmitPrompt": [
       {
-        "command": "cmd /c \"for /d %M in (\\\"%USERPROFILE%\\.cursor\\plugins\\cache\\*\\\") do @for /d %P in (\\\"%M\\cursor-usage-collector\\*\\\") do @if exist \\\"%P\\scripts\\report_usage.cmd\\\" (call \\\"%P\\scripts\\report_usage.cmd\\\" & exit /b 0) & echo {}\" ; sh -c 'for f in \"$HOME\"/.cursor/plugins/cache/*/cursor-usage-collector/*/scripts/report_usage.sh; do [ -f \"$f\" ] && exec sh \"$f\"; done; printf \"%s\\n\" \"{}\"' ; exit 0",
+        "command": "cmd /c \"scripts\\report_usage.cmd\" ; sh scripts/report_usage.sh ; exit 0",
         "timeout": 8
       }
     ]
