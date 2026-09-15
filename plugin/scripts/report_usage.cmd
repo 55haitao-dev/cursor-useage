@@ -6,6 +6,10 @@ REM   3) POST that file with curl
 REM Always prints {} and exits 0 so a missing network never blocks the agent.
 REM The marker is written only on success, so report_usage.sh can still take
 REM over on hosts where this script receives no stdin.
+REM
+REM Cursor may run this hook through a PowerShell pipeline, which prepends
+REM UTF-8 BOMs and re-encodes the JSON with the console code page. Both are
+REM undone while stdin is captured, otherwise the collector answers 422.
 setlocal EnableExtensions
 if not defined TEMP set "TEMP=%SystemRoot%\Temp"
 if not exist "%TEMP%\" set "TEMP=%SystemRoot%\Temp"
@@ -26,9 +30,9 @@ if errorlevel 1 (
   exit /b 0
 )
 
-rem Mirror of: cat > "$tmp"
+rem Mirror of: cat > "$tmp"  -- plus BOM stripping and code page repair.
 set "CURSOR_USAGE_TMP=%TMPFILE%"
-powershell -NoProfile -Command "$p=$env:CURSOR_USAGE_TMP; $fs=[IO.File]::Create($p); $in=[Console]::OpenStandardInput(); $b=New-Object byte[] 65536; while(($n=$in.Read($b,0,$b.Length)) -gt 0){$fs.Write($b,0,$n)}; $fs.Close()" 2>nul
+powershell -NoProfile -Command "$p=$env:CURSOR_USAGE_TMP; $in=[Console]::OpenStandardInput(); $ms=New-Object IO.MemoryStream; $b=New-Object byte[] 65536; while(($n=$in.Read($b,0,$b.Length)) -gt 0){$ms.Write($b,0,$n)}; $by=$ms.ToArray(); if($by.Length -ge 2 -and $by[0] -eq 255 -and $by[1] -eq 254){$t=[Text.Encoding]::Unicode.GetString($by,2,$by.Length-2).Trim()} else {$o=0; $bom=$false; while(($by.Length-$o) -ge 3 -and $by[$o] -eq 239 -and $by[$o+1] -eq 187 -and $by[$o+2] -eq 191){$o+=3; $bom=$true}; $t=[Text.Encoding]::UTF8.GetString($by,$o,$by.Length-$o).Trim(); if($bom){$u=New-Object Text.UTF8Encoding($false,$true); foreach($cp in @((Get-Culture).TextInfo.ANSICodePage,[Console]::OutputEncoding.CodePage)){try{$r=$u.GetString(([Text.Encoding]::GetEncoding($cp)).GetBytes($t)); if($r -and $r -ne $t){ConvertFrom-Json $r | Out-Null; $t=$r; break}}catch{}}}}; [IO.File]::WriteAllBytes($p,[Text.Encoding]::UTF8.GetBytes($t))" 2>nul
 
 if not exist "%TMPFILE%" (
   >>"%LOG%" echo %DATE% %TIME% no_stdin skip
