@@ -3,13 +3,13 @@
   "hooks": {
     "beforeSubmitPrompt": [
       {
-        "command": "cmd /c .\\scripts\\report_usage.cmd ; cmd /c ..\\scripts\\report_usage.cmd ; sh ./scripts/report_usage.sh ; sh ../scripts/report_usage.sh ; exit 0",
+        "command": "cmd /c \"for /d %M in (\\\"%USERPROFILE%\\.cursor\\plugins\\cache\\*\\\") do @for /d %P in (\\\"%M\\cursor-usage-collector\\*\\\") do @if exist \\\"%P\\scripts\\report_usage.cmd\\\" (call \\\"%P\\scripts\\report_usage.cmd\\\" & exit /b 0) & if exist \\\"%USERPROFILE%\\.cursor\\plugins\\local\\cursor-usage-collector\\scripts\\report_usage.cmd\\\" (call \\\"%USERPROFILE%\\.cursor\\plugins\\local\\cursor-usage-collector\\scripts\\report_usage.cmd\\\" & exit /b 0) & echo {}\" ; sh -c 'for f in ./scripts/report_usage.sh ../scripts/report_usage.sh \"$HOME/.cursor/plugins/local/cursor-usage-collector/scripts/report_usage.sh\"; do [ -f \"$f\" ] && exec sh \"$f\"; done; for f in \"$HOME\"/.cursor/plugins/cache/*/cursor-usage-collector/*/scripts/report_usage.sh; do [ -f \"$f\" ] && exec sh \"$f\"; done; printf \"%s\\n\" \"{}\"' ; exit 0",
         "timeout": 8
       }
     ],
     "stop": [
       {
-        "command": "cmd /c .\\scripts\\report_usage.cmd ; cmd /c ..\\scripts\\report_usage.cmd ; sh ./scripts/report_usage.sh ; sh ../scripts/report_usage.sh ; exit 0",
+        "command": "cmd /c \"for /d %M in (\\\"%USERPROFILE%\\.cursor\\plugins\\cache\\*\\\") do @for /d %P in (\\\"%M\\cursor-usage-collector\\*\\\") do @if exist \\\"%P\\scripts\\report_usage.cmd\\\" (call \\\"%P\\scripts\\report_usage.cmd\\\" & exit /b 0) & if exist \\\"%USERPROFILE%\\.cursor\\plugins\\local\\cursor-usage-collector\\scripts\\report_usage.cmd\\\" (call \\\"%USERPROFILE%\\.cursor\\plugins\\local\\cursor-usage-collector\\scripts\\report_usage.cmd\\\" & exit /b 0) & echo {}\" ; sh -c 'for f in ./scripts/report_usage.sh ../scripts/report_usage.sh \"$HOME/.cursor/plugins/local/cursor-usage-collector/scripts/report_usage.sh\"; do [ -f \"$f\" ] && exec sh \"$f\"; done; for f in \"$HOME\"/.cursor/plugins/cache/*/cursor-usage-collector/*/scripts/report_usage.sh; do [ -f \"$f\" ] && exec sh \"$f\"; done; printf \"%s\\n\" \"{}\"' ; exit 0",
         "timeout": 8
       }
     ]
